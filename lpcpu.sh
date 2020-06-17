@@ -507,7 +507,7 @@ sestatus > $LOGDIR/selinux_status.$id.$RUN_NUMBER
 
 ## slabtop##########################################################################################
 function setup_slabtop() {
-	echo "Setting up slabtop ."
+	echo "Setting up slabtop."
 	SLABTOP=$(which slabtop)
 	if [ -z "$SLABTOP" ]; then
 		echo "ERROR: slabtop is not installed.  To correct this problem install the required package for your distribution."
@@ -531,14 +531,6 @@ function report_slabtop() {
 	echo "Processing slabtop data."
 }
 
-function setup_postprocess_slabtop() {
-    echo -n '${LPCPUDIR}/postprocess/postprocess-slabtop--dir=.'" --run-number=$RUN_NUMBER --id=$id"
-    if [ -e "${LPCPUDIR}/tools/block-device-hierarchy.pl" ]; then
-	echo -n " --bdh=block-device-hierarchy.dat"
-    fi
-    echo
-}
-
 ## cpupower##########################################################################################
 function setup_cpupower() {
 	echo "Setting up cpupower ."
@@ -551,7 +543,7 @@ function setup_cpupower() {
 
 function start_cpupower() {
 	echo "starting cpupower." | tee -a $LOGDIR/profile-log.$RUN_NUMBER
-	 while [ 1 ]; do cpupower monitor -i $interval ;  done  >> $LOGDIR/cpupower.$id.$RUN_NUMBER &
+	while [ 1 ]; do cpupower monitor -i $interval ;  done  >> $LOGDIR/cpupower.$id.$RUN_NUMBER &
 	CPUPOWER_PID=$!
 	disown $CPUPOWER_PID
 }
@@ -561,101 +553,51 @@ function stop_cpupower() {
 	kill $CPUPOWER_PID
 }
 
-function report_cpupower() {
-	echo "Processing cpupower data."
-}
-
-function setup_postprocess_cpupower() {
-    echo -n '${LPCPUDIR}/postprocess/postprocess-cpupower--dir=.'" --run-number=$RUN_NUMBER --id=$id"
-    if [ -e "${LPCPUDIR}/tools/block-device-hierarchy.pl" ]; then
-	echo -n " --bdh=block-device-hierarchy.dat"
-    fi
-    echo
-}
-
 ## cpu_vulnerabilities##########################################################################################
 
 function setup_cpu_vulnerabilities() {
-        echo "Setting up cpu_vulnerabilities ."
-       		if [ ! -d  /sys/devices/system/cpu/vulnerabilities ]; then
-                	echo "ERROR: cpu_vulnerabilities is not there in /sys."
-                	exit 1
-        	fi
+        echo "Setting up cpu_vulnerabilities."
+       	if [ ! -d  /sys/devices/system/cpu/vulnerabilities ]; then
+               	echo "Note: cpu_vulnerabilities is not there in /sys."
+       	fi
 }
 
 function start_cpu_vulnerabilities() {
         echo "starting cpu_vulnerabilities." | tee -a $LOGDIR/profile-log.$RUN_NUMBER
-		cd /sys/devices/system/cpu/vulnerabilities
-         	for f in *; do echo -e $f"\n\t$(cat $f)"; done  >> $LOGDIR/cpu_vulnerabilities.$id.$RUN_NUMBER &
-		cd -
-        	CPU_VULN_PID=$!
-        	disown $CPU_VULN_PID
-}
-
-function stop_cpu_vulnerabilities() {
-        echo "Stopping cpu_vulnerabilities."
-        kill $CPU_VULN_PID
-}
-
-function report_cpu_vulnerabilities() {
-        echo "Processing cpu_vulnerabilities data."
-}
-
-function setup_postprocess_cpu_vulnerabilities() {
-    echo -n '${LPCPUDIR}/postprocess/postprocess-cpu_vulnerabilities--dir=.'" --run-number=$RUN_NUMBER --id=$id"
-    if [ -e "${LPCPUDIR}/tools/block-device-hierarchy.pl" ]; then
-        echo -n " --bdh=block-device-hierarchy.dat"
-    fi
-    echo
+       	grep . /sys/devices/system/cpu/vulnerabilities/* >> $LOGDIR/cpu_vulnerabilities.$id.$RUN_NUMBER
 }
 
 ## schedstat##########################################################################################
 function setup_schedstat() {
         echo "Setting up schedstat ."
-        #SCHEDSTAT=$(which schedstat)
         if [ ! -f  /proc/schedstat ]; then
-                echo "ERROR: schedstat is not there in /proc."
-                exit 1
+                echo "Note: schedstat is not there in /proc."
         fi
 }
 
 function start_schedstat() {
         echo "starting schedstat." | tee -a $LOGDIR/profile-log.$RUN_NUMBER
-         while [ 1 ]; do cat /proc/schedstat ;  sleep $interval ; done  >> $LOGDIR/schedstat.$id.$RUN_NUMBER &
-        SCHEDCAT_PID=$!
-        disown $SCHEDCAT_PID
+        while [ 1 ]; do cat /proc/schedstat; sleep $interval; done >> $LOGDIR/schedstat.$id.$RUN_NUMBER &
+        SCHEDSTAT_PID=$!
+        disown $SCHEDSTAT_PID
 }
 
 function stop_schedstat() {
         echo "Stopping schedstat."
-        kill $SCHEDCAT_PID
-}
-
-function report_schedstat() {
-        echo "Processing schedstat data."
-}
-
-function setup_postprocess_schedstat() {
-    echo -n '${LPCPUDIR}/postprocess/postprocess-schedstat--dir=.'" --run-number=$RUN_NUMBER --id=$id"
-    if [ -e "${LPCPUDIR}/tools/block-device-hierarchy.pl" ]; then
-        echo -n " --bdh=block-device-hierarchy.dat"
-    fi
-    echo
+        kill $SCHEDSTAT_PID
 }
 
 ## proc_vmstat##########################################################################################
 function setup_proc_vmstat() {
         echo "Setting up proc_vmstat ."
-        #SCHEDSTAT=$(which proc_vmstat)
         if [ ! -f  /proc/vmstat ]; then
-                echo "ERROR: proc_vmstat is not there in /proc."
-                exit 1
+                echo "Note: proc_vmstat is not there in /proc."
         fi
 }
 
 function start_proc_vmstat() {
         echo "starting proc_vmstat." | tee -a $LOGDIR/profile-log.$RUN_NUMBER
-         while [ 1 ]; do cat /proc/vmstat | grep thp;  sleep $interval ; done  >> $LOGDIR/proc_vmstat.$id.$RUN_NUMBER &
+        while [ 1 ]; do cat /proc/vmstat | grep thp; sleep $interval; done >> $LOGDIR/proc_vmstat.$id.$RUN_NUMBER &
         PROC_VMSTAT_PID=$!
         disown $PROC_VMSTAT_PID
 }
@@ -663,18 +605,6 @@ function start_proc_vmstat() {
 function stop_proc_vmstat() {
         echo "Stopping proc_vmstat."
         kill $PROC_VMSTAT_PID
-}
-
-function report_proc_vmstat() {
-        echo "Processing proc_vmstat data."
-}
-
-function setup_postprocess_proc_vmstat() {
-    echo -n '${LPCPUDIR}/postprocess/postprocess-proc_vmstat--dir=.'" --run-number=$RUN_NUMBER --id=$id"
-    if [ -e "${LPCPUDIR}/tools/block-device-hierarchy.pl" ]; then
-        echo -n " --bdh=block-device-hierarchy.dat"
-    fi
-    echo
 }
 
 ## proc-interrupts ##########################################################################################

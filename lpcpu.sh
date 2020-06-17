@@ -527,10 +527,6 @@ function stop_slabtop() {
 	kill $ISLABTOP_PID
 }
 
-function report_slabtop() {
-	echo "Processing slabtop data."
-}
-
 ## cpupower##########################################################################################
 function setup_cpupower() {
 	echo "Setting up cpupower ."
